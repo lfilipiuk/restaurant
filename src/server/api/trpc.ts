@@ -43,7 +43,13 @@ const createInnerTRPCContext = (_opts: CreateContextOptions) => {
  * @link https://trpc.io/docs/context
  */
 export const createTRPCContext = (_opts: CreateNextContextOptions) => {
-  return createInnerTRPCContext({});
+  const { res, req } = _opts;
+
+  return {
+    res,
+    req,
+    prisma,
+  };
 };
 
 /**
@@ -52,14 +58,39 @@ export const createTRPCContext = (_opts: CreateNextContextOptions) => {
  * This is where the trpc api is initialized, connecting the context and
  * transformer
  */
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import {verifyAuth} from "../../lib/auth";
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
   errorFormatter({ shape }) {
     return shape;
   },
+});
+
+const isAdmin = t.middleware(async ({ ctx, next }) => {
+  const { req } = ctx;
+  const token = req.cookies["user-token"];
+
+  if (!token) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Missing user token",
+    });
+  }
+
+  const verifiedToken = await verifyAuth(token);
+
+  if(!verifiedToken) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "Invalid user token",
+    })
+  }
+
+  //user is authenticaed as admin
+  return next();
 });
 
 /**
@@ -82,4 +113,5 @@ export const createTRPCRouter = t.router;
  * tRPC API. It does not guarantee that a user querying is authorized, but you
  * can still access user session data if they are logged in
  */
+export const adminProcedure = t.procedure.use(isAdmin);
 export const publicProcedure = t.procedure;

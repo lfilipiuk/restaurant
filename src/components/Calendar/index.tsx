@@ -1,22 +1,15 @@
-import type { FC } from "react";
+import type {Dispatch, FC, SetStateAction} from "react";
 import ReactCalendar from "react-calendar";
-import { useState } from "react";
 import {add, format} from "date-fns";
 import {INTERVAL, STORE_CLOSING_TIME, STORE_OPENING_TIME} from "../../constants/config";
+import type {DateTime} from "@types"
 
-// interface indexProps {}
-
-interface DateType {
-  justDate: Date | null;
-  dateTime: Date | null;
+interface indexProps{
+    setDate: Dispatch<SetStateAction<DateTime>>;
+    date: DateTime;
 }
 
-const index: FC = ({}) => {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const [date, setDate] = useState<DateType>({
-    justDate: null,
-    dateTime: null,
-  });
+const index: FC<indexProps> = ({setDate, date}) => {
 
   const getTimes = () => {
     if(!date.justDate) return;

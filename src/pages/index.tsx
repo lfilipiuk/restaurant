@@ -1,9 +1,21 @@
+"use client";
 import { type NextPage } from "next";
 import Head from "next/head";
 import Calendar from "../components/Calendar";
-
+import {useEffect, useState} from "react";
+import type { DateTime } from "@types";
+import Spinner from "../components/Spinner";
+import Menu from "../components/Menu";
+import {api} from "../utils/api";
 
 const Home: NextPage = () => {
+  const [date, setDate] = useState<DateTime>({
+    justDate: null,
+    dateTime: null,
+  });
+
+  // tRPC check menu status
+    const { isFetchedAfterMount } = api.menu.checkMenuStatus.useQuery();
 
   return (
     <>
@@ -14,7 +26,14 @@ const Home: NextPage = () => {
       </Head>
 
       <div>
-        <Calendar />
+        {!date.dateTime && <Calendar date={date} setDate={setDate} />}
+        {date.dateTime && isFetchedAfterMount ? (
+          <Menu />
+        ) : (
+          <div className={"flex h-screen items-center justify-center"}>
+            <Spinner />
+          </div>
+        )}
       </div>
     </>
   );

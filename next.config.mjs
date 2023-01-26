@@ -14,5 +14,8 @@ const config = {
     locales: ["en"],
     defaultLocale: "en",
   },
+  images: {
+    domains: ["lukasz-booking-software.s3.eu-central-1.amazonaws.com"],
+  }
 };
 export default config;

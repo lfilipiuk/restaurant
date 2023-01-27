@@ -2,20 +2,26 @@
 import { type NextPage } from "next";
 import Head from "next/head";
 import Calendar from "../components/Calendar";
-import {useEffect, useState} from "react";
+import { useState } from "react";
 import type { DateTime } from "@types";
-import Spinner from "../components/Spinner";
-import Menu from "../components/Menu";
-import {api} from "../utils/api";
+import { api } from "../utils/api";
+import { formatISO } from "date-fns";
+import { prisma } from "../server/db"
 
-const Home: NextPage = () => {
+
+interface HomeProps {
+    days: Day[]
+    closedDays: string[] // ISO string
+}
+
+const Home: NextPage<HomeProps> = ({days, closedDays}) => {
   const [date, setDate] = useState<DateTime>({
     justDate: null,
     dateTime: null,
   });
 
   // tRPC check menu status
-    const { isFetchedAfterMount } = api.menu.checkMenuStatus.useQuery();
+  const { isFetchedAfterMount } = api.menu.checkMenuStatus.useQuery();
 
   return (
     <>
@@ -26,17 +32,25 @@ const Home: NextPage = () => {
       </Head>
 
       <div>
-        {!date.dateTime && <Calendar date={date} setDate={setDate} />}
-        {date.dateTime && isFetchedAfterMount ? (
-          <Menu />
-        ) : (
-          <div className={"flex h-screen items-center justify-center"}>
-            <Spinner />
-          </div>
-        )}
+        <Calendar days={days} closedDays={closedDays} />
       </div>
     </>
   );
 };
+
+export async function getServerSideProps() {
+  const days = await prisma.day.findMany();
+  const closedDays = (await prisma.closedDay.findMany()).map((day) =>
+    formatISO(day.date)
+  );
+
+  return {
+    props: {
+      // will be passed to the page component as props
+        days,
+        closedDays,
+    },
+  };
+}
 
 export default Home;

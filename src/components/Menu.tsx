@@ -5,7 +5,11 @@ import { useState } from "react";
 import { capitalize, selectOptions } from "../utils/helpers";
 import Image from "next/image";
 
-const Menu: FC = ({}) => {
+interface MenuProps {
+  selectedTime: string; //as ISO string
+}
+
+const Menu: FC<MenuProps> = ({selectedTime}) => {
   const { data: menuItems } = api.menu.getMenuItems.useQuery();
   const [filter, setFilter] = useState<undefined | string>("");
 
